@@ -2,8 +2,9 @@ package main
 
 import (
         "strconv"
-        "fmt"
-        "strings"
+        "net/http"
+        "log"
+        "encoding/json"
 )
 
 func fizzbuzz(n int) []string {
@@ -25,8 +26,19 @@ func fizzbuzz(n int) []string {
    return output
 }
 
-func main() {
-  fb := fizzbuzz(20)
+func defaultHandler(w http.ResponseWriter, r *http.Request) {
+  o := fizzbuzz(20)
 
-  fmt.Printf(strings.Join(fb, "\n" ) + "\n")
+  js, err := json.Marshal(o)
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+  }
+
+  w.Header().Set("Content-Type", "application/json")
+  w.Write(js)
+}
+
+func main() {
+  http.HandleFunc("/", defaultHandler)
+  log.Fatal(http.ListenAndServe(":8080", nil))
 }
